@@ -1,33 +1,33 @@
 @echo off
-title Iniciar Projeto Django
+title Iniciar Projeto ClearOrder
 echo =========================================
 echo   Preparando o ambiente Django...
 echo =========================================
 
-:: 1. Verifica se a pasta venv existe, se não, cria uma
-if not exist "venv\Scripts\activate" (
-    echo [!] Ambiente virtual "venv" nao encontrado. Criando um novo...
-    python -m venv venv
+:: 1. Verifica e ativa o ambiente virtual na raiz (.venv)
+if exist ".venv\Scripts\activate" (
+    echo [*] Ativando o ambiente virtual...
+    call .venv\Scripts\activate
+) else (
+    echo [!] Ambiente virtual ".venv" nao encontrado na raiz!
+    pause
+    exit
 )
 
-:: 2. Ativa o ambiente virtual
-echo [*] Ativando o ambiente virtual...
-call venv\Scripts\activate
-
-:: 3. Instala as dependencias se o requirements.txt existir
+:: 2. Instala dependencias se houver requirements.txt na raiz
 if exist "requirements.txt" (
     echo [*] Verificando e instalando dependencias...
     pip install -r requirements.txt
-) else (
-    echo [!] Arquivo "requirements.txt" nao encontrado. Pulando instalacao.
 )
 
-:: 4. Verifica se o manage.py existe e inicia o servidor
-if exist "manage.py" (
+:: 3. Acessa a pasta config e inicia o servidor
+if exist "config\manage.py" (
+    echo [*] Acessando a pasta config...
+    cd config
     echo [*] Iniciando o servidor Django...
     python manage.py runserver
 ) else (
-    echo [!] "manage.py" nao encontrado. Verifique se o .bat esta na raiz do projeto.
+    echo [!] "manage.py" nao encontrado dentro da pasta "config".
 )
 
 pause
