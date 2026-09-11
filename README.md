@@ -2,7 +2,7 @@
 Nosso PI
 admin: 
 Yes
-senha: Yes
+senha: beta1234
 cpf: 12345678999
 user de estudante:
 joao
