@@ -43,15 +43,20 @@
                 <button class="relative text-slate-400 hover:text-slate-600 transition">
                     <i class="fa-regular fa-bell text-lg"></i>
                 </button>
-                <div class="w-9 h-9 bg-blue-700 text-white rounded-full flex items-center justify-center font-bold text-xs">
-                    MO
+                <div class="w-9 h-9 bg-teal-600 text-white rounded-full flex items-center justify-center font-bold text-xs">
+                        {% if request.user.first_name %}
+    
+                            {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
+                        {% else %}
+      
+                            {{ request.user.username|slice:":2"|upper }}
+                        {% endif %}
                 </div>
             </div>
         </header>
 
         <main class="flex-1 p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-y-auto">
-            
-            <section class="lg:col-span-4 space-y-4">
+          <section class="lg:col-span-4 space-y-4">
                 <div class="flex items-center justify-between">
                     <h2 class="font-bold text-slate-900 text-base">Quartos ({{ estudantes|length }})</h2>
                     <span class="text-xs text-slate-400 font-medium">
@@ -68,13 +73,16 @@
                                     <p class="text-xs text-slate-400 mt-0.5">{{ item.andar|default:"1" }}º andar · {{ item.moradores_count|default:"1" }} morador(es)</p>
                                 </div>
                                 <div class="flex items-center space-x-2">
-                                    {% if item.status == 'Aprovado' %}
+                                    
+                                 
+                                    {% if item.quarto.status == 'Aprovado' %}
                                         <span class="px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[11px] font-semibold rounded-full">Aprovado</span>
-                                    {% elif item.status == 'Reprovado' %}
+                                    {% elif item.quarto.status == 'Reprovado' %}
                                         <span class="px-2.5 py-1 bg-rose-50 text-rose-600 text-[11px] font-semibold rounded-full">Reprovado</span>
                                     {% else %}
                                         <span class="px-2.5 py-1 bg-amber-50 text-amber-600 text-[11px] font-semibold rounded-full">Pendente</span>
                                     {% endif %}
+                                    
                                     <i class="fa-solid fa-chevron-right text-slate-300 text-xs ml-2"></i>
                                 </div>
                             </div>
@@ -138,13 +146,14 @@
                         </div>
 
                         <div class="grid grid-cols-2 gap-4 pt-2">
-                            <button type="submit" name="aprovado" value="False" class="w-full py-2.5 px-4 bg-white border border-rose-500 text-rose-500 hover:bg-rose-50 font-semibold text-sm rounded-xl transition flex items-center justify-center space-x-2">
-                                <i class="fa-solid fa-xmark"></i>
-                                <span>Reprovar</span>
+                          
+                            <button type="submit" name="aprovado" value="False" class="w-full py-3 text-rose-600 font-semibold border border-rose-200 bg-rose-50 hover:bg-rose-100 rounded-xl transition">
+                                <i class="fa-solid fa-xmark mr-2"></i> Reprovar
                             </button>
-                            <button type="submit" name="aprovado" value="True" class="w-full py-2.5 px-4 bg-emerald-600 text-white hover:bg-emerald-700 font-semibold text-sm rounded-xl transition flex items-center justify-center space-x-2">
-                                <i class="fa-solid fa-check"></i>
-                                <span>Aprovar</span>
+
+                            
+                            <button type="submit" name="aprovado" value="True" class="w-full py-3 text-white font-semibold bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-sm">
+                                <i class="fa-solid fa-check mr-2"></i> Aprovar
                             </button>
                         </div>
                     </form>

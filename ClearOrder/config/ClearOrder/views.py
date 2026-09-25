@@ -3,8 +3,9 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+import calendar
 
-from .models import Estudante, Monitor, Tarefa, Quarto, Vistoria
+from .models import Estudante, Monitor, Tarefa, Quarto, Vistoria, SolicitacaoReparo
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -29,7 +30,7 @@ def login_view(request):
                 username_para_login = monitor_encontrado.user.username
             except Monitor.DoesNotExist:
                 pass
-
+                
         usuario = authenticate(request, username=username_para_login, password=senha_digitada)
 
         if usuario is not None:
@@ -42,6 +43,7 @@ def login_view(request):
                 return redirect('/admin/')
         else:
             messages.error(request, 'CPF ou senha inválidos. Tente novamente.')
+            return redirect('login')
 
     return render(request, 'login.html')
 
@@ -114,10 +116,14 @@ def detalhes_quarto(request, quarto_id):
         quarto_selecionado = get_object_or_404(Quarto, id=quarto_id)
 
         if request.method == 'POST':
-            nota = request.POST.get('nota')
+          
+            nota_raw = request.POST.get('nota')
+            nota = nota_raw if nota_raw else None
+            
             observacoes = request.POST.get('observacoes')
             aprovado = request.POST.get('aprovado') == 'True'
 
+            
             Vistoria.objects.create(
                 monitor=request.user.monitor,
                 quarto=quarto_selecionado,
@@ -125,17 +131,26 @@ def detalhes_quarto(request, quarto_id):
                 observacoes=observacoes,
                 aprovado=aprovado
             )
-
-          
+            
+           
+            if quarto_selecionado.streak_dias is None:
+                quarto_selecionado.streak_dias = 0
+                
+            
             if aprovado:
-                quarto_selecionado.streak += 1
+                quarto_selecionado.status = 'Aprovado'
+                quarto_selecionado.streak_dias += 1
             else:
-                quarto_selecionado.streak = 0
+                quarto_selecionado.status = 'Pendente' 
+                quarto_selecionado.streak_dias = 0
+                
+           
             quarto_selecionado.save()
 
             messages.success(request, 'Vistoria guardada com sucesso!')
             return redirect('painel_monitor')
 
+       
         estudantes = Estudante.objects.all()
         total_pendentes = Tarefa.objects.filter(status='Pendente').count()
 
@@ -146,7 +161,6 @@ def detalhes_quarto(request, quarto_id):
             'quarto_selecionado': quarto_selecionado 
         }
 
-      
         return render(request, 'painel_monitor.html', contexto)
 
     elif hasattr(request.user, 'estudante'):
@@ -156,29 +170,20 @@ def detalhes_quarto(request, quarto_id):
         return redirect('login')
 @login_required
 def reportar_problema(request):
-    # Trava de segurança: apenas estudantes acessam essa tela
+    
     if hasattr(request.user, 'estudante'):
         
-        # Quando o aluno preencher o formulário e clicar em "Enviar Relatório"
+        
         if request.method == 'POST':
             titulo = request.POST.get('titulo')
             categoria = request.POST.get('categoria')
             descricao = request.POST.get('descricao')
             
-            # Aqui você salvará no banco de dados. 
-            # Exemplo (remova os comentários quando criar a tabela no models.py):
-            # Problema.objects.create(
-            #     estudante_responsavel=request.user.estudante,
-            #     titulo=titulo,
-            #     categoria=categoria,
-            #     descricao=descricao,
-            #     status='Aberto'
-            # )
             
             messages.success(request, 'Problema reportado com sucesso! A manutenção foi notificada.')
             return redirect('painel_estudante')
             
-        # Se for apenas um clique no menu (GET), carrega a tela do Vitor vazia
+       
         return render(request, 'reportar_problema.html')
         
     elif hasattr(request.user, 'monitor'):
@@ -188,3 +193,82 @@ def reportar_problema(request):
     else:
         return redirect('login')
     
+
+@login_required
+def progresso(request):
+    if hasattr(request.user, 'estudante'):
+        estudante = request.user.estudante
+        quarto = estudante.quarto
+    
+        tarefas = Tarefa.objects.filter(estudante_responsavel=estudante)
+        total_tarefas = tarefas.count()
+        tarefas_concluidas = tarefas.filter(status='Concluída').count()
+        progresso_percentual = (tarefas_concluidas / total_tarefas * 100) if total_tarefas > 0 else 0
+        
+       
+        hoje = timezone.now()
+        _, num_dias = calendar.monthrange(hoje.year, hoje.month)
+        todos_os_dias = list(range(1, num_dias + 1))
+        
+        
+        
+        vistorias_mes = Vistoria.objects.filter(
+            quarto=quarto,
+            aprovado=True,
+            data_vistoria__year=hoje.year,
+            data_vistoria__month=hoje.month
+        )
+        dias_aprovados = list(vistorias_mes.values_list('data_vistoria__day', flat=True))
+        
+        contexto = {
+            'estudante': estudante,
+            'tarefas': tarefas,
+            'total_tarefas': total_tarefas,
+            'tarefas_concluidas': tarefas_concluidas,
+            'progresso_percentual': progresso_percentual,
+            'hoje': hoje,
+            'todos_os_dias': todos_os_dias,
+            'dias_aprovados': dias_aprovados,
+            'streak_atual': quarto.streak_dias
+        }
+        
+        return render(request, 'progresso.html', contexto)
+        
+    elif hasattr(request.user, 'monitor'):
+        return redirect('painel_monitor')
+        
+    else:
+        logout(request)
+        messages.error(request, 'Acesso negado.')
+        return redirect('login')
+    
+@login_required
+def enviar_relatorio(request):
+    if hasattr(request.user, 'estudante'):
+        estudante = request.user.estudante
+        quarto = estudante.quarto
+        
+        if request.method == 'POST':
+            titulo = request.POST.get('titulo')
+            categoria = request.POST.get('categoria')
+            descricao = request.POST.get('descricao')
+            
+            SolicitacaoReparo.objects.create(
+                estudante=estudante, 
+                titulo=titulo,
+                categoria=categoria,
+                descricao=descricao,
+                status='Em Aberto'    
+            )
+            
+            messages.success(request, 'Problema reportado com sucesso! A manutenção foi notificada.')
+            return redirect('painel_estudante')
+        
+        return render(request, 'reportar_problema.html')
+    
+    elif hasattr(request.user, 'monitor'):
+        messages.warning(request, 'Monitores não podem reportar problemas por esta tela.')
+        return redirect('painel_monitor')
+    
+    else:
+        return redirect('login')

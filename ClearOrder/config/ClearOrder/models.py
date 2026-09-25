@@ -56,7 +56,7 @@ class Vistoria(models.Model):
     monitor = models.ForeignKey(Monitor, on_delete=models.CASCADE)
     quarto = models.ForeignKey(Quarto, on_delete=models.CASCADE)
     data_vistoria = models.DateField(default=timezone.now)
-    nota = models.DecimalField(max_digits=5, decimal_places=2)
+    nota = models.IntegerField(null=True, blank=True)
     observacoes = models.TextField(blank=True, null=True)
     aprovado = models.BooleanField()
 
@@ -75,6 +75,8 @@ class Notificacao(models.Model):
 
 class SolicitacaoReparo(models.Model):
     estudante = models.ForeignKey(Estudante, on_delete=models.CASCADE)
+    titulo = models.CharField(max_length=150, default="Sem título") # Campo novo
+    categoria = models.CharField(max_length=50, default="outros")   # Campo novo
     descricao = models.TextField()
     data_abertura = models.DateTimeField(default=timezone.now)
     status = models.CharField(max_length=50, default='Em Aberto')

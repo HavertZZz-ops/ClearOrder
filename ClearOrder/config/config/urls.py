@@ -3,7 +3,7 @@ from django.urls import path
 from django.views.generic import RedirectView
 
 
-from ClearOrder.views import concluir_tarefa, fazer_logout, login_view, painel_estudante, painel_monitor, detalhes_quarto, reportar_problema;
+from ClearOrder.views import concluir_tarefa, enviar_relatorio, fazer_logout, login_view, painel_estudante, painel_monitor, detalhes_quarto, progresso, reportar_problema;
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -15,4 +15,6 @@ urlpatterns = [
     path('tarefa/<int:tarefa_id>/concluir/', concluir_tarefa, name='concluir_tarefa'),
     path('quarto/<int:quarto_id>/', detalhes_quarto, name='detalhes_quarto'),
     path('reportar/', reportar_problema, name='reportar_problema'),
+    path('progresso/', progresso, name='progresso'),
+    path('estudante/enviar-relatorio/', enviar_relatorio, name='enviar_relatorio'),# Adicione esta linha para a URL de progresso
 ]
