@@ -41,7 +41,7 @@ class Cronograma(models.Model):
     def __str__(self):
         return f"Cronograma: {self.quarto} ({self.data_inicio} a {self.data_fim})"
 
-class TarefaLimpeza(models.Model):
+class Tarefa(models.Model):
     cronograma = models.ForeignKey(Cronograma, on_delete=models.CASCADE)
     estudante_responsavel = models.ForeignKey(Estudante, on_delete=models.CASCADE)
     titulo = models.CharField(max_length=100)

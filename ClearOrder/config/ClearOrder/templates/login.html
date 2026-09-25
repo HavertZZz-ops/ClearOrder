@@ -20,22 +20,62 @@
                 Limpeza e Organização de Alojamentos Escolares
             </p>
         </div>
+{% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+            <p class="text-red-500 text-sm text-center font-bold">{{ message }}</p>
+        {% endfor %}
+    </div>
+{% endif %}
 <form method="POST" action="{% url 'login' %}" class="bg-white p-6 rounded-lg shadow-md">
     {% csrf_token %}
     
     <div class="mb-4">
         <label class="block text-gray-700 text-sm font-bold mb-2">CPF</label>
-        <input type="text" name="username" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" maxlength="11" placeholder="000.000.000-00" required>
+        <input type="text" name="cpf" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" maxlength="11" placeholder="000.000.000-00" required>
     </div>
     
     <div class="mb-6">
         <label class="block text-gray-700 text-sm font-bold mb-2">Senha</label>
-        <input type="password" name="password" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Sua Senha" required>
+        <div class="relative">
+            <input type="password" name="password" id="id_password" class="w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Sua Senha" required>
+            
+            <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none">
+                <img id="eyeIcon" src="{% static 'img/view-eye-svgrepo-com.svg' %}" alt="Mostrar senha" class="w-5 h-5 opacity-60 hover:opacity-100"> 
+            </button>
+        </div>
     </div>
+    
     
     <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
         Entrar
     </button>
+    <script>
+        // Executa apenas quando a página estiver totalmente carregada
+        document.addEventListener('DOMContentLoaded', function () {
+            const togglePassword = document.querySelector('#togglePassword');
+            const passwordInput = document.querySelector('#id_password');
+    
+            if (togglePassword && passwordInput) {
+                togglePassword.addEventListener('click', function (e) {
+                    // Previne qualquer comportamento padrão do botão
+                    e.preventDefault(); 
+                    
+                    // Força a mudança do tipo do input
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        console.log("Senha visível");
+                    } else {
+                        passwordInput.type = 'password';
+                        console.log("Senha oculta");
+                    }
+                });
+            } else {
+                console.log("Erro: Não encontrou o botão ou o input na página.");
+            }
+        });
+    </script>
+    
 </form>
 
     <footer class="text-center text-gray-400 text-sm mt-6">
